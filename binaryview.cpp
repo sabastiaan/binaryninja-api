@@ -1847,6 +1847,126 @@ void BinaryView::RemoveUserDataReference(uint64_t fromAddr, uint64_t toAddr)
 }
 
 
+vector<ReferenceSource> BinaryView::GetCodeReferencesForType(const QualifiedName& type)
+{
+	size_t count;
+	
+	BNQualifiedName nameObj = type.GetAPIObject();
+	BNReferenceSource* refs = BNGetCodeReferencesForType(m_object, &nameObj, &count);
+	QualifiedName::FreeAPIObject(&nameObj);
+
+	vector<ReferenceSource> result;
+	result.reserve(count);
+	for (size_t i = 0; i < count; i++)
+	{
+		ReferenceSource src;
+		src.func = new Function(BNNewFunctionReference(refs[i].func));
+		src.arch = new CoreArchitecture(refs[i].arch);
+		src.addr = refs[i].addr;
+		result.push_back(src);
+	}
+
+	BNFreeCodeReferences(refs, count);
+	return result;
+}
+
+
+vector<uint64_t> BinaryView::GetDataReferencesForType(const QualifiedName& type)
+{
+	size_t count;
+	BNQualifiedName nameObj = type.GetAPIObject();
+	uint64_t* refs = BNGetDataReferencesForType(m_object, &nameObj, &count);
+	QualifiedName::FreeAPIObject(&nameObj);
+
+	vector<uint64_t> result(refs, &refs[count]);
+	BNFreeDataReferences(refs);
+	return result;
+}
+
+
+vector<TypeReferenceSource> BinaryView::GetTypeReferencesForType(const QualifiedName& type)
+{
+	size_t count;
+	
+	BNQualifiedName nameObj = type.GetAPIObject();
+	BNTypeReferenceSource* refs = BNGetTypeReferencesForType(m_object, &nameObj, &count);
+	QualifiedName::FreeAPIObject(&nameObj);
+
+	vector<TypeReferenceSource> result;
+	result.reserve(count);
+	for (size_t i = 0; i < count; i++)
+	{
+		TypeReferenceSource src;
+		src.name = QualifiedName::FromAPIObject(&refs[i].name);
+		src.offset = refs[i].offset;
+		src.type = refs[i].type;
+		result.push_back(src);
+	}
+
+	BNFreeTypeReferences(refs, count);
+	return result;
+}
+
+
+vector<ReferenceSource> BinaryView::GetCodeReferencesForTypeField(const QualifiedName& type, uint64_t offset)
+{
+	size_t count;
+	BNQualifiedName nameObj = type.GetAPIObject();
+	BNReferenceSource* refs = BNGetCodeReferencesForTypeField(m_object, &nameObj, offset, &count);
+	QualifiedName::FreeAPIObject(&nameObj);
+
+	vector<ReferenceSource> result;
+	result.reserve(count);
+	for (size_t i = 0; i < count; i++)
+	{
+		ReferenceSource src;
+		src.func = new Function(BNNewFunctionReference(refs[i].func));
+		src.arch = new CoreArchitecture(refs[i].arch);
+		src.addr = refs[i].addr;
+		result.push_back(src);
+	}
+
+	BNFreeCodeReferences(refs, count);
+	return result;
+}
+
+
+vector<uint64_t> BinaryView::GetDataReferencesForTypeField(const QualifiedName& type, uint64_t offset)
+{
+	size_t count;
+	BNQualifiedName nameObj = type.GetAPIObject();
+	uint64_t* refs = BNGetDataReferencesForTypeField(m_object, &nameObj, offset, &count);
+	QualifiedName::FreeAPIObject(&nameObj);
+
+	vector<uint64_t> result(refs, &refs[count]);
+	BNFreeDataReferences(refs);
+	return result;
+}
+
+
+vector<TypeReferenceSource> BinaryView::GetTypeReferencesForTypeField(const QualifiedName& type, uint64_t offset)
+{
+	size_t count;
+	BNQualifiedName nameObj = type.GetAPIObject();
+	BNTypeReferenceSource* refs = BNGetTypeReferencesForTypeField(m_object, &nameObj, offset, &count);
+	QualifiedName::FreeAPIObject(&nameObj);
+
+	vector<TypeReferenceSource> result;
+	result.reserve(count);
+	for (size_t i = 0; i < count; i++)
+	{
+		TypeReferenceSource src;
+		src.name = QualifiedName::FromAPIObject(&refs[i].name);
+		src.offset = refs[i].offset;
+		src.type = refs[i].type;
+		result.push_back(src);
+	}
+
+	BNFreeTypeReferences(refs, count);
+	return result;
+}
+
+
 vector<uint64_t> BinaryView::GetCallees(ReferenceSource callSite)
 {
 	size_t count;
